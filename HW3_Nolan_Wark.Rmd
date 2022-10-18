@@ -1,0 +1,95 @@
+---
+title: "HW3"
+author: "Nolan Wark"
+date: "10/17/2022"
+output: github_document
+---
+
+github repo: [my github repo for homework 3 - Nolan Wark](https://github.com/nwark/HW3_Nolan_Wark)
+
+# Setup
+```{r setup, message=FALSE, warning=FALSE}
+library(nycflights13)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+```{r}
+#Data
+# flights
+# airlines
+# airports
+# planes
+# unique(planes$year)
+# weather
+```
+
+# Q1
+```{r}
+temp = flights %>% 
+  group_by(dest) %>% 
+  summarise(avg_arr_delay = mean(arr_delay, na.rm = T),
+            avg_dep_delay = mean(dep_delay, na.rm = T))
+
+airports %>%
+  inner_join(temp, c("faa" = "dest")) %>%
+  ggplot(aes(lon, lat)) +
+    borders("state") +
+    geom_point(aes(color=avg_arr_delay)) +
+    coord_quickmap() +
+    ggtitle('Average arrivel delay by destination')
+
+airports %>%
+  inner_join(temp, c("faa" = "dest")) %>%
+  ggplot(aes(lon, lat)) +
+    borders("state") +
+    geom_point(aes(color=avg_dep_delay)) +
+    coord_quickmap() +
+    ggtitle('Average departure delay by destination')
+```
+
+
+# Q2
+```{r}
+flights %>% 
+  left_join(select(airports, faa, lat, lon), by = c("origin" = "faa")) %>% 
+  left_join(select(airports, faa, lat, lon), by = c("dest" = "faa"), suffix = c("_origin", "_dest")) %>% 
+  select(origin, lat_origin, lon_origin, dest, lat_dest, lon_dest, everything())
+```
+
+
+# Q3
+```{r}
+flights %>% 
+  left_join(select(planes, year, tailnum), by = c("tailnum" = "tailnum"), suffix = c("_flight", "_man")) %>% 
+  drop_na(year_man) %>% 
+  group_by(year_man) %>% 
+  summarise(avg_dep_delay = mean(dep_delay, na.rm = T),
+            avg_arr_delay = mean(arr_delay, na.rm = T)) %>% 
+  mutate(years_old = 2013 - year_man) %>% 
+  pivot_longer(cols = c('avg_dep_delay', 'avg_arr_delay'), names_to = 'avg_delay_type', values_to = 'delay_amount') %>% 
+  ggplot(aes(x=years_old, y=delay_amount, color=avg_delay_type)) +
+    geom_line() +
+    geom_point() +
+    geom_smooth(method='lm')
+
+```
+
+### There seems to be a slightly negative relation between the age of the plane and the average delay.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
